@@ -84,12 +84,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Colors.grey.shade200,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ..._helper._messages.map((m) => Text(
-                          "User: ${m["user"].toString()} Message: ${m["message"].toString()}",
-                          style: const TextStyle(color: Colors.black),
-                        ))
-                  ],
+                  children: _helper._messages
+                      .map((m) => Text(
+                            "User: ${m["user"].toString()} Message: ${m["message"].toString()}",
+                            style: const TextStyle(color: Colors.black),
+                          )).toList(),
                 ),
               )
             ],
