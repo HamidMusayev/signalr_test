@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:signalr_test/chatsc.dart';
 
 import 'home_screen.dart';
 
@@ -14,7 +15,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'SignalR Test',
       theme: ThemeData(primarySwatch: Colors.amber),
-      home: const HomeScreen(),
+      home: const ChatScreen(name: 'Hamid'),
     );
   }
 }
