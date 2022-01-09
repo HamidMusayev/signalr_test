@@ -20,6 +20,10 @@ class SignalRHelper {
     hubConnection?.invoke('SendMessage', args: [username, message]);
   }
 
+  void sendMessageToUser(String username, String connectionId, String message) {
+    hubConnection?.invoke('SendMessageToUser', args: [username, connectionId, message]);
+  }
+
   void disconnect() {
     hubConnection?.stop();
   }
