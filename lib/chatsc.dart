@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:signalr_test/helper_test.dart';
 
 import 'helper.dart';
 
@@ -14,7 +15,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _msgTxt = TextEditingController();
   final TextEditingController _userTxt = TextEditingController();
 
-  SignalRHelper signalR = SignalRHelper();
+  SignalRHelperTest signalR = SignalRHelperTest();
 
   receiveMessageHandler(args) {
     signalR.messages.add({"user": args[0], "message": args[1]});
@@ -27,7 +28,9 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Chat Screen')),
+      appBar: AppBar(
+          title: SelectableText(
+              'My Connection ID - ${signalR.hubConnection?.connectionId}')),
       body: Column(
         children: [
           Card(
@@ -37,8 +40,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 controller: _userTxt,
                 textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(
-                  hintText: 'Username',
-                  suffixIcon: Icon(Icons.person_rounded),
+                  hintText: 'Connection ID',
+                  suffixIcon: Icon(Icons.format_indent_decrease_rounded),
                 ),
               ),
             ),
@@ -69,7 +72,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.send_rounded),
                     onPressed: () {
-                      signalR.sendMessage(_userTxt.text, _msgTxt.text);
+                      signalR.sendMessage(receiverConId: _userTxt.text, message: _msgTxt.text);
                       //signalR.sendMessageToUser(widget.username, signalR.hubConnection!.connectionId!, _msgTxt.text);
                       _msgTxt.clear();
                       _scrlCnt.jumpTo(_scrlCnt.position.maxScrollExtent + 75);
