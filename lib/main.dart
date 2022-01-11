@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'SignalR Test',
       theme: ThemeData(primarySwatch: Colors.amber),
-      home: const ChatScreen(username: 'Hamid'),
+      home: const ChatScreen(),
     );
   }
 }

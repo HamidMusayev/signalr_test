@@ -3,7 +3,7 @@ import 'dart:developer';
 import 'package:signalr_core/signalr_core.dart';
 
 class SignalRHelper {
-  final url = 'http://192.168.1.5/chatHub';
+  final url = 'http://192.168.200.114/chatHub';
   HubConnection? hubConnection;
 
   final List<Map<String, String>> messages = [];

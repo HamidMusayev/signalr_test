@@ -3,9 +3,7 @@ import 'package:flutter/material.dart';
 import 'helper.dart';
 
 class ChatScreen extends StatefulWidget {
-  final String username;
-
-  const ChatScreen({Key? key, required this.username}) : super(key: key);
+  const ChatScreen({Key? key}) : super(key: key);
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -14,6 +12,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrlCnt = ScrollController();
   final TextEditingController _msgTxt = TextEditingController();
+  final TextEditingController _userTxt = TextEditingController();
 
   SignalRHelper signalR = SignalRHelper();
 
@@ -31,6 +30,19 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(title: const Text('Chat Screen')),
       body: Column(
         children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                controller: _userTxt,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(
+                  hintText: 'Username',
+                  suffixIcon: Icon(Icons.person_rounded),
+                ),
+              ),
+            ),
+          ),
           Expanded(
             child: ListView.separated(
               separatorBuilder: (_, i) => const Divider(thickness: 2),
@@ -38,15 +50,11 @@ class _ChatScreenState extends State<ChatScreen> {
               itemCount: signalR.messages.length,
               itemBuilder: (context, i) {
                 return ListTile(
-                  title: Text(
-                    signalR.messages[i]['user'] == widget.username
-                        ? signalR.messages[i]['message'].toString()
-                        : '${signalR.messages[i]['user']}: ${signalR.messages[i]['message']}',
-                    textAlign: signalR.messages[i]['isMine'] == '1'
-                        ? TextAlign.end
-                        : TextAlign.start,
-                  ),
-                );
+                    title: Text(signalR.messages[i]['message'].toString(),
+                        textAlign: signalR.messages[i]['isMine'] == '1'
+                            ? TextAlign.end
+                            : TextAlign.start),
+                    subtitle: Text(signalR.messages[i]['user'] ?? ''));
               },
             ),
           ),
@@ -59,9 +67,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 decoration: InputDecoration(
                   hintText: 'Send Message',
                   suffixIcon: IconButton(
-                    icon: const Icon(Icons.send),
+                    icon: const Icon(Icons.send_rounded),
                     onPressed: () {
-                      signalR.sendMessage(widget.username, _msgTxt.text);
+                      signalR.sendMessage(_userTxt.text, _msgTxt.text);
                       //signalR.sendMessageToUser(widget.username, signalR.hubConnection!.connectionId!, _msgTxt.text);
                       _msgTxt.clear();
                       _scrlCnt.jumpTo(_scrlCnt.position.maxScrollExtent + 75);
