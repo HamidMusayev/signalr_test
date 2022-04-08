@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:signalr_test/helper_test.dart';
 
-import 'helper.dart';
-
 class ChatScreen extends StatefulWidget {
   const ChatScreen({Key? key}) : super(key: key);
 
@@ -72,7 +70,8 @@ class _ChatScreenState extends State<ChatScreen> {
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.send_rounded),
                     onPressed: () {
-                      signalR.sendMessage(receiverConId: _userTxt.text, message: _msgTxt.text);
+                      signalR.sendMessage(
+                          receiverConId: _userTxt.text, message: _msgTxt.text);
                       //signalR.sendMessageToUser(widget.username, signalR.hubConnection!.connectionId!, _msgTxt.text);
                       _msgTxt.clear();
                       _scrlCnt.jumpTo(_scrlCnt.position.maxScrollExtent + 75);
