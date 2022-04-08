@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:flutter/foundation.dart';
 import 'package:signalr_core/signalr_core.dart';
 
 class SignalRHelperTest {
@@ -8,19 +9,27 @@ class SignalRHelperTest {
 
   final List<Map<String, String>> messages = [];
 
-  void connect(receiveMessageHandler) {
+  Future<void> connect(receiveMessageHandler) async {
     hubConnection = HubConnectionBuilder().withUrl(url).build();
-    hubConnection?.onclose((error) => log('Connection Close'));
+    hubConnection?.onclose((error) => log('Connection Closed'));
 
     hubConnection?.on('ReceiveMessagePrivate', receiveMessageHandler);
-    hubConnection?.start();
+    await hubConnection?.start();
   }
 
-  void sendMessage({required String receiverConId, required String message}) {
-    hubConnection?.invoke('SendPrivateMessage', args: [receiverConId, hubConnection?.connectionId, message]);
+  Future<void> sendMessage(
+      {required String receiverConId, required String message}) async {
+    if (hubConnection?.state == HubConnectionState.connected) {
+      await hubConnection?.invoke('SendPrivateMessage',
+          args: [receiverConId, hubConnection?.connectionId, message]);
+    } else {
+      debugPrintThrottled(
+          'Failed to sent message connection state is: ${hubConnection?.state}');
+    }
   }
 
-  void disconnect() {
-    hubConnection?.stop();
+  Future<void> disconnect() async {
+    await hubConnection?.stop();
+    hubConnection = null;
   }
 }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:signalr_test/bubble/left.dart';
+import 'package:signalr_test/bubble/right.dart';
 import 'package:signalr_test/helper_test.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -17,9 +19,11 @@ class _ChatScreenState extends State<ChatScreen> {
 
   receiveMessageHandler(args) {
     signalR.messages.add({"user": args[0], "message": args[1]});
-    _scrlCnt.animateTo(_scrlCnt.position.maxScrollExtent + 75,
-        curve: Curves.easeInOutQuart,
-        duration: const Duration(milliseconds: 400));
+    _scrlCnt.animateTo(
+      _scrlCnt.position.maxScrollExtent + 75,
+      curve: Curves.easeInOutQuart,
+      duration: const Duration(milliseconds: 400),
+    );
     setState(() {});
   }
 
@@ -27,13 +31,15 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: SelectableText(
-              'My Connection ID - ${signalR.hubConnection?.connectionId}')),
+        title: SelectableText(
+          'My Connection Id - ${signalR.hubConnection?.connectionId}',
+        ),
+      ),
       body: Column(
         children: [
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(12),
               child: TextField(
                 controller: _userTxt,
                 textInputAction: TextInputAction.next,
@@ -45,23 +51,22 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           Expanded(
-            child: ListView.separated(
-              separatorBuilder: (_, i) => const Divider(thickness: 2),
-              controller: _scrlCnt,
-              itemCount: signalR.messages.length,
-              itemBuilder: (context, i) {
-                return ListTile(
-                    title: Text(signalR.messages[i]['message'].toString(),
-                        textAlign: signalR.messages[i]['isMine'] == '1'
-                            ? TextAlign.end
-                            : TextAlign.start),
-                    subtitle: Text(signalR.messages[i]['user'] ?? ''));
-              },
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: ListView.separated(
+                separatorBuilder: (context, i) => const SizedBox(height: 6),
+                controller: _scrlCnt,
+                itemCount: signalR.messages.length,
+                itemBuilder: (context, i) => signalR.messages[i]['user'] ==
+                        signalR.hubConnection?.connectionId
+                    ? RightBubble(message: signalR.messages[i])
+                    : LeftBubble(message: signalR.messages[i]),
+              ),
             ),
           ),
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(12),
               child: TextField(
                 controller: _msgTxt,
                 textInputAction: TextInputAction.next,
@@ -69,12 +74,13 @@ class _ChatScreenState extends State<ChatScreen> {
                   hintText: 'Send Message',
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.send_rounded),
-                    onPressed: () {
-                      signalR.sendMessage(
-                          receiverConId: _userTxt.text, message: _msgTxt.text);
-                      //signalR.sendMessageToUser(widget.username, signalR.hubConnection!.connectionId!, _msgTxt.text);
-                      _msgTxt.clear();
-                      _scrlCnt.jumpTo(_scrlCnt.position.maxScrollExtent + 75);
+                    onPressed: () async {
+                      if (_msgTxt.text.isNotEmpty) {
+                        await signalR.sendMessage(
+                            receiverConId: _userTxt.text,
+                            message: _msgTxt.text);
+                        _msgTxt.clear();
+                      }
                     },
                   ),
                 ),
@@ -88,15 +94,23 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void initState() {
-    signalR.connect(receiveMessageHandler);
+    setupConnection().then((value) => setState(() {}));
     super.initState();
   }
 
   @override
   void dispose() {
+    disposeConnection();
+    super.dispose();
+  }
+
+  Future<void> setupConnection() async {
+    await signalR.connect(receiveMessageHandler);
+  }
+
+  Future<void> disposeConnection() async {
     _msgTxt.dispose();
     _scrlCnt.dispose();
-    signalR.disconnect();
-    super.dispose();
+    await signalR.disconnect();
   }
 }
