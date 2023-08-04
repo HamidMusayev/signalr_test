@@ -1,30 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:signalr_test/bubble/left.dart';
-import 'package:signalr_test/bubble/right.dart';
-import 'package:signalr_test/helper_test.dart';
+
+import 'package:signalr_test/widgets/chat_bubble.dart';
+import 'package:signalr_test/helpers/signalr_helper.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({Key? key}) : super(key: key);
 
   @override
-  _ChatScreenState createState() => _ChatScreenState();
+  ChatScreenState createState() => ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
-  final ScrollController _scrlCnt = ScrollController();
-  final TextEditingController _msgTxt = TextEditingController();
+class ChatScreenState extends State<ChatScreen> {
+  final ScrollController _scrollController = ScrollController();
+  final TextEditingController _messageText = TextEditingController();
   final TextEditingController _userTxt = TextEditingController();
 
-  SignalRHelperTest signalR = SignalRHelperTest();
+  SignalRHelper signalR = SignalRHelper();
 
-  receiveMessageHandler(args) {
+  void messageReceivedHandler(args) {
     signalR.messages.add({"user": args[0], "message": args[1]});
-    _scrlCnt.animateTo(
-      _scrlCnt.position.maxScrollExtent + 75,
+    scrollToEnd();
+    setState(() {});
+  }
+
+  void scrollToEnd() {
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent + 75,
       curve: Curves.easeInOutQuart,
       duration: const Duration(milliseconds: 400),
     );
-    setState(() {});
+  }
+
+  Future sendMessage() async {
+    await signalR.sendMessage(
+        receiverConId: _userTxt.text, message: _messageText.text);
+
+    _messageText.clear();
   }
 
   @override
@@ -55,12 +66,12 @@ class _ChatScreenState extends State<ChatScreen> {
               padding: const EdgeInsets.all(12),
               child: ListView.separated(
                 separatorBuilder: (context, i) => const SizedBox(height: 6),
-                controller: _scrlCnt,
+                controller: _scrollController,
                 itemCount: signalR.messages.length,
                 itemBuilder: (context, i) => signalR.messages[i]['user'] ==
                         signalR.hubConnection?.connectionId
-                    ? RightBubble(message: signalR.messages[i])
-                    : LeftBubble(message: signalR.messages[i]),
+                    ? ChatBubble.right(message: signalR.messages[i])
+                    : ChatBubble.left(message: signalR.messages[i]),
               ),
             ),
           ),
@@ -68,20 +79,14 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: TextField(
-                controller: _msgTxt,
+                controller: _messageText,
                 textInputAction: TextInputAction.next,
                 decoration: InputDecoration(
                   hintText: 'Send Message',
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.send_rounded),
-                    onPressed: () async {
-                      if (_msgTxt.text.isNotEmpty) {
-                        await signalR.sendMessage(
-                            receiverConId: _userTxt.text,
-                            message: _msgTxt.text);
-                        _msgTxt.clear();
-                      }
-                    },
+                    onPressed: () async =>
+                        _messageText.text.isNotEmpty ? await sendMessage() : null,
                   ),
                 ),
               ),
@@ -104,13 +109,13 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
-  Future<void> setupConnection() async {
-    await signalR.connect(receiveMessageHandler);
+  Future setupConnection() async {
+    await signalR.initializeConnection(messageReceivedHandler);
   }
 
-  Future<void> disposeConnection() async {
-    _msgTxt.dispose();
-    _scrlCnt.dispose();
+  Future disposeConnection() async {
+    _messageText.dispose();
+    _scrollController.dispose();
     await signalR.disconnect();
   }
 }
